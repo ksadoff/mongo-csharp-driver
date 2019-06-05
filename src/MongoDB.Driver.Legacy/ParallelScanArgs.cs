@@ -13,6 +13,7 @@
 * limitations under the License.
 */
 
+using System;
 using MongoDB.Bson.Serialization;
 
 namespace MongoDB.Driver

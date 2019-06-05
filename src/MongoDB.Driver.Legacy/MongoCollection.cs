@@ -1702,11 +1702,12 @@ namespace MongoDB.Driver
         /// <typeparam name="TDocument">The type of the document.</typeparam>
         /// <param name="args">The args.</param>
         /// <returns>Multiple enumerators, one for each cursor.</returns>
+        [Obsolete("ParallelScanAs was deprecated in version 4.1.")]
         public ReadOnlyCollection<IEnumerator<TDocument>> ParallelScanAs<TDocument>(ParallelScanArgs<TDocument> args)
         {
             return UsingImplicitSession(session => ParallelScanAs(session, args));
         }
-
+        [Obsolete("ParallelScanAs was deprecated in version 4.1.")]
         private ReadOnlyCollection<IEnumerator<TDocument>> ParallelScanAs<TDocument>(IClientSessionHandle session, ParallelScanArgs<TDocument> args)
         {
             var batchSize = args.BatchSize;
@@ -1730,6 +1731,7 @@ namespace MongoDB.Driver
         /// <param name="documentType">Type of the document.</param>
         /// <param name="args">The args.</param>
         /// <returns>Multiple enumerators, one for each cursor.</returns>
+        [Obsolete("ParallelScanAs was deprecated in version 4.1.")]
         public ReadOnlyCollection<IEnumerator> ParallelScanAs(Type documentType, ParallelScanArgs args)
         {
             var parallelScanArgsDefinition = typeof(ParallelScanArgs<>);
@@ -2482,6 +2484,7 @@ namespace MongoDB.Driver
         /// </summary>
         /// <param name="args">The args.</param>
         /// <returns>Multiple enumerators, one for each cursor.</returns>
+        [Obsolete("ParallelScan was deprecated in version 4.1.")]
         public virtual ReadOnlyCollection<IEnumerator<TDefaultDocument>> ParallelScan(ParallelScanArgs<TDefaultDocument> args)
         {
             return ParallelScanAs<TDefaultDocument>(args);

@@ -2936,6 +2936,7 @@ namespace MongoDB.Driver.Tests
         }
 
         [Fact]
+        [Obsolete("ParallelScan was deprecated in version 4.1.")]
         public void TestParallelScan()
         {
             if (_primary.Supports(FeatureId.ParallelScanCommand))
