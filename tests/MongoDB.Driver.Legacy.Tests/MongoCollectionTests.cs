@@ -2063,6 +2063,7 @@ namespace MongoDB.Driver.Tests
         }
 
         [SkippableFact]
+        [Obsolete("The group command was deprecated in version 3.4.")]
         public void TestGroupWithFinalizeFunction()
         {
             RequireServer.Check().Supports(Feature.GroupCommand);
@@ -2092,6 +2093,7 @@ namespace MongoDB.Driver.Tests
         }
 
         [SkippableFact]
+        [Obsolete("The group command was deprecated in version 3.4.")]
         public void TestGroupWithKeyFields()
         {
             RequireServer.Check().Supports(Feature.GroupCommand);
@@ -2120,6 +2122,7 @@ namespace MongoDB.Driver.Tests
         }
 
         [SkippableFact]
+        [Obsolete("The group command was deprecated in version 3.4.")]
         public void TestGroupWithKeyFunction()
         {
             RequireServer.Check().Supports(Feature.GroupCommand);
@@ -2148,6 +2151,7 @@ namespace MongoDB.Driver.Tests
         }
 
         [SkippableFact]
+        [Obsolete("The group command was deprecated in version 3.4.")]
         public void TestGroupWithMaxTime()
         {
             RequireServer.Check().Supports(Feature.GroupCommand);
@@ -2175,6 +2179,7 @@ namespace MongoDB.Driver.Tests
         }
 
         [SkippableFact]
+        [Obsolete("The group command was deprecated in version 3.4.")]
         public void TestGroupWithQuery()
         {
             RequireServer.Check().Supports(Feature.GroupCommand);
