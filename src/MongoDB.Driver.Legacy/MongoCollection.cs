@@ -1707,6 +1707,7 @@ namespace MongoDB.Driver
         {
             return UsingImplicitSession(session => ParallelScanAs(session, args));
         }
+        
         [Obsolete("ParallelScanAs was deprecated in version 4.1.")]
         private ReadOnlyCollection<IEnumerator<TDocument>> ParallelScanAs<TDocument>(IClientSessionHandle session, ParallelScanArgs<TDocument> args)
         {
