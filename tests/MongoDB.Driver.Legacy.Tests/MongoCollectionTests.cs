@@ -2063,7 +2063,6 @@ namespace MongoDB.Driver.Tests
         }
 
         [SkippableFact]
-        [Obsolete("The group command was deprecated in version 3.4.")]
         public void TestGroupWithFinalizeFunction()
         {
             RequireServer.Check().Supports(Feature.GroupCommand);
@@ -2074,7 +2073,8 @@ namespace MongoDB.Driver.Tests
             _collection.Insert(new BsonDocument("x", 3));
             _collection.Insert(new BsonDocument("x", 3));
             _collection.Insert(new BsonDocument("x", 3));
-
+            
+#pragma warning disable 618
             var results = _collection.Group(new GroupArgs
             {
                 KeyFields = GroupBy.Keys("x"),
@@ -2082,7 +2082,8 @@ namespace MongoDB.Driver.Tests
                 ReduceFunction = "function(doc, prev) { prev.count += 1 }",
                 FinalizeFunction = "function(result) { result.count = -result.count; }"
             }).ToArray();
-
+#pragma warning restore
+            
             Assert.Equal(3, results.Length);
             Assert.Equal(1, results[0]["x"].ToInt32());
             Assert.Equal(-2, results[0]["count"].ToInt32());
@@ -2093,7 +2094,6 @@ namespace MongoDB.Driver.Tests
         }
 
         [SkippableFact]
-        [Obsolete("The group command was deprecated in version 3.4.")]
         public void TestGroupWithKeyFields()
         {
             RequireServer.Check().Supports(Feature.GroupCommand);
@@ -2104,14 +2104,16 @@ namespace MongoDB.Driver.Tests
             _collection.Insert(new BsonDocument("x", 3));
             _collection.Insert(new BsonDocument("x", 3));
             _collection.Insert(new BsonDocument("x", 3));
-
+            
+#pragma warning disable 618
             var results = _collection.Group(new GroupArgs
             {
                 KeyFields = GroupBy.Keys("x"),
                 Initial = new BsonDocument("count", 0),
                 ReduceFunction = "function(doc, prev) { prev.count += 1 }"
             }).ToArray();
-
+#pragma warning restore
+            
             Assert.Equal(3, results.Length);
             Assert.Equal(1, results[0]["x"].ToInt32());
             Assert.Equal(2, results[0]["count"].ToInt32());
@@ -2122,7 +2124,6 @@ namespace MongoDB.Driver.Tests
         }
 
         [SkippableFact]
-        [Obsolete("The group command was deprecated in version 3.4.")]
         public void TestGroupWithKeyFunction()
         {
             RequireServer.Check().Supports(Feature.GroupCommand);
@@ -2133,14 +2134,16 @@ namespace MongoDB.Driver.Tests
             _collection.Insert(new BsonDocument("x", 3));
             _collection.Insert(new BsonDocument("x", 3));
             _collection.Insert(new BsonDocument("x", 3));
-
+            
+#pragma warning disable 618
             var results = _collection.Group(new GroupArgs
             {
                 KeyFunction = "function(doc) { return { x : doc.x }; }",
                 Initial = new BsonDocument("count", 0),
                 ReduceFunction = "function(doc, prev) { prev.count += 1 }"
             }).ToArray();
-
+#pragma warning restore
+            
             Assert.Equal(3, results.Length);
             Assert.Equal(1, results[0]["x"].ToInt32());
             Assert.Equal(2, results[0]["count"].ToInt32());
@@ -2151,9 +2154,10 @@ namespace MongoDB.Driver.Tests
         }
 
         [SkippableFact]
-        [Obsolete("The group command was deprecated in version 3.4.")]
         public void TestGroupWithMaxTime()
         {
+#pragma warning disable 618
+            
             RequireServer.Check().Supports(Feature.GroupCommand);
             if (_primary.Supports(FeatureId.MaxTime))
             {
@@ -2176,10 +2180,11 @@ namespace MongoDB.Driver.Tests
                     }
                 }
             }
+#pragma warning restore
+            
         }
 
         [SkippableFact]
-        [Obsolete("The group command was deprecated in version 3.4.")]
         public void TestGroupWithQuery()
         {
             RequireServer.Check().Supports(Feature.GroupCommand);
@@ -2190,7 +2195,8 @@ namespace MongoDB.Driver.Tests
             _collection.Insert(new BsonDocument("x", 3));
             _collection.Insert(new BsonDocument("x", 3));
             _collection.Insert(new BsonDocument("x", 3));
-
+            
+#pragma warning disable 618
             var results = _collection.Group(new GroupArgs
             {
                 Query = Query.LT("x", 3),
@@ -2198,7 +2204,8 @@ namespace MongoDB.Driver.Tests
                 Initial = new BsonDocument("count", 0),
                 ReduceFunction = "function(doc, prev) { prev.count += 1 }"
             }).ToArray();
-
+#pragma warning restore
+            
             Assert.Equal(2, results.Length);
             Assert.Equal(1, results[0]["x"].ToInt32());
             Assert.Equal(2, results[0]["count"].ToInt32());
