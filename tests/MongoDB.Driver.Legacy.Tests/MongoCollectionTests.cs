@@ -2936,7 +2936,6 @@ namespace MongoDB.Driver.Tests
         }
 
         [Fact]
-        [Obsolete("ParallelScan was deprecated in version 4.1.")]
         public void TestParallelScan()
         {
             if (_primary.Supports(FeatureId.ParallelScanCommand))
@@ -2950,11 +2949,13 @@ namespace MongoDB.Driver.Tests
                     _collection.Insert(new BsonDocument("_id", i));
                 }
 
+#pragma warning disable 618
                 var enumerators = _collection.ParallelScanAs(typeof(BsonDocument), new ParallelScanArgs
                 {
                     BatchSize = 100,
                     NumberOfCursors = numberOfCursors
                 });
+#pragma warning restore
                 Assert.True(enumerators.Count >= 1);
 
                 var ids = new List<int>();
