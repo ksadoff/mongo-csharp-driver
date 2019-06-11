@@ -63,7 +63,6 @@ namespace MongoDB.Driver.Core.Misc
         private static readonly Feature __maxStaleness = new Feature("MaxStaleness", new SemanticVersion(3, 3, 12));
         private static readonly Feature __maxTime = new Feature("MaxTime", new SemanticVersion(2, 6, 0));
         private static readonly Feature __mmapV1StorageEngine = new Feature("MmapV1StorageEngine", new SemanticVersion(0, 0, 0), new SemanticVersion(4, 1, 0, ""));
-        private static readonly Feature __parallelCollectionScan = new Feature("ParallelCollectionScan", new SemanticVersion(2,6,0), new SemanticVersion(4,1,0, ""));
         private static readonly Feature __partialIndexes = new Feature("PartialIndexes", new SemanticVersion(3, 2, 0));
         private static readonly ReadConcernFeature __readConcern = new ReadConcernFeature("ReadConcern", new SemanticVersion(3, 2, 0));
         private static readonly Feature __retryableReads = new Feature("RetryableReads", new SemanticVersion(3, 6, 0));
@@ -276,11 +275,6 @@ namespace MongoDB.Driver.Core.Misc
         /// Gets the mmapv1 storage engine feature.
         /// </summary>
         public static Feature MmapV1StorageEngine => __mmapV1StorageEngine;
-
-        /// <summary>
-        /// Gets the parallel collection scan feature.
-        /// </summary>
-        public static Feature ParallelCollectionScan => __parallelCollectionScan;
 
         /// <summary>
         /// Gets the partial indexes feature.
