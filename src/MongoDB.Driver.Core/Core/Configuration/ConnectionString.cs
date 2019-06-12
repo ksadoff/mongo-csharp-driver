@@ -63,7 +63,7 @@ namespace MongoDB.Driver.Core.Configuration
         private readonly Dictionary<string, string> _authMechanismProperties;
         private readonly CompressorsOptions _compressorsOptions;
 
-        // these are all readonly, but since they are not assigned
+        // these are all readonly, but since they are not assigned 
         // from the ctor, they cannot be marked as such.
         private string _applicationName;
         private string _authMechanism;
@@ -365,7 +365,7 @@ namespace MongoDB.Driver.Core.Configuration
         {
             get { return _readPreferenceTags; }
         }
-
+        
         /// <summary>
         /// Gets a value indicating whether or not to retry reads.
         /// </summary>
@@ -759,14 +759,8 @@ namespace MongoDB.Driver.Core.Configuration
                 @"((?<username>[^:@]+)(:(?<password>[^:@]*))?@)?" +
                 serversPattern + @"(/" + databasePattern + ")?/?" + optionsPattern + "$";
 
-            Match percentMatch = null;
-            if (_originalConnectionString.Contains("%"))
-            {
-                percentMatch = Regex.Match(_originalConnectionString, "(%[0-9A-F-a-f]{2})+");
-            }
-
             var match = Regex.Match(_originalConnectionString, pattern);
-            if (!match.Success || (match.Success && percentMatch!=null && !percentMatch.Success))
+            if (!match.Success)
             {
                 var message = string.Format("The connection string '{0}' is not valid.", _originalConnectionString);
                 throw new MongoConfigurationException(message);
@@ -1117,7 +1111,7 @@ namespace MongoDB.Driver.Core.Configuration
         }
 
         private List<string> GetHostsFromResponse(IDnsQueryResponse response)
-        {
+        {         
             var hosts = new List<string>();
             foreach (var srvRecord in response.Answers.SrvRecords())
             {
@@ -1136,7 +1130,7 @@ namespace MongoDB.Driver.Core.Configuration
         {
             var txtRecords = response.Answers
                 .TxtRecords().ToList();
-
+            
             if (txtRecords.Count > 1)
             {
                 throw new MongoConfigurationException("Only 1 TXT record is allowed when using the SRV protocol.");
