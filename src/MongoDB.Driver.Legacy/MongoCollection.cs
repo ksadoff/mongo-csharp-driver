@@ -1707,7 +1707,7 @@ namespace MongoDB.Driver
         {
             return UsingImplicitSession(session => ParallelScanAs(session, args));
         }
-        
+
         [Obsolete("ParallelScanAs was deprecated in server version 4.1.")]
         private ReadOnlyCollection<IEnumerator<TDocument>> ParallelScanAs<TDocument>(IClientSessionHandle session, ParallelScanArgs<TDocument> args)
         {
@@ -2222,7 +2222,7 @@ namespace MongoDB.Driver
 #pragma warning disable 618
             return MongoCursor.Create(documentType, this, query, _settings.ReadConcern, _settings.ReadPreference, serializer);
 #pragma warning restore
-        
+
         }
 
         private MongoCursor<TDocument> FindAs<TDocument>(IMongoQuery query, IBsonSerializer serializer)
