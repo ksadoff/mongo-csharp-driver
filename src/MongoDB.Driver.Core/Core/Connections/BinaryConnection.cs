@@ -314,13 +314,22 @@ namespace MongoDB.Driver.Core.Connections
             }
         }
 
+        private void EnsureMessageSizeIsValid(Int32 messageSize)
+        {
+            if (messageSize < 0 || messageSize > _description.MaxMessageSize)
+            {
+                throw new MongoInternalException("The size of the message is invalid.");
+            }
+        }
         private IByteBuffer ReceiveBuffer()
         {
             try
             {
                 var messageSizeBytes = new byte[4];
+                messageSizeBytes[0] = (Byte)(_description.MaxMessageSize);
                 _stream.ReadBytes(messageSizeBytes, 0, 4, _backgroundTaskCancellationToken);
                 var messageSize = BitConverter.ToInt32(messageSizeBytes, 0);
+                EnsureMessageSizeIsValid(messageSize);
                 var inputBufferChunkSource = new InputBufferChunkSource(BsonChunkPool.Default);
                 var buffer = ByteBufferFactory.Create(inputBufferChunkSource, messageSize);
                 buffer.Length = messageSize;
@@ -382,6 +391,7 @@ namespace MongoDB.Driver.Core.Connections
                 var messageSizeBytes = new byte[4];
                 await _stream.ReadBytesAsync(messageSizeBytes, 0, 4, _backgroundTaskCancellationToken).ConfigureAwait(false);
                 var messageSize = BitConverter.ToInt32(messageSizeBytes, 0);
+                EnsureMessageSizeIsValid(messageSize);
                 var inputBufferChunkSource = new InputBufferChunkSource(BsonChunkPool.Default);
                 var buffer = ByteBufferFactory.Create(inputBufferChunkSource, messageSize);
                 buffer.Length = messageSize;
