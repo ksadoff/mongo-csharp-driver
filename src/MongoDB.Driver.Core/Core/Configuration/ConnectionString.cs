@@ -759,17 +759,19 @@ namespace MongoDB.Driver.Core.Configuration
                 @"((?<username>[^:@]+)(:(?<password>[^:@]*))?@)?" +
                 serversPattern + @"(/" + databasePattern + ")?/?" + optionsPattern + "$";
 
-            Match badPercentMatch = null;
-            var hexDigit= "0-9A-Fa-f";
-            var percentPattern = $"(%[^{hexDigit}])|"  // % followed by a non-hexadecimal digit OR
-                                 +$"(%[{hexDigit}][^{hexDigit}])"; // % followed by a hexadecimal digit and a non-hexadecimal digit
             if (_originalConnectionString.Contains("%"))
             {
-                badPercentMatch = Regex.Match(_originalConnectionString, percentPattern);
+                var invalidPercentPattern = @"%$|%.$|%[^0-9a-fA-F]|%[0-9a-fA-F][^0-9a-fA-F]";
+                if (Regex.IsMatch(_originalConnectionString, invalidPercentPattern))
+                {
+                    var message = string.Format("The connection string '{0}' contains an invalid '%' escape sequence.",
+                        _originalConnectionString);
+                    throw new MongoConfigurationException(message);
+                }
             }
 
             var match = Regex.Match(_originalConnectionString, pattern);
-            if (!match.Success || (match.Success && badPercentMatch!=null && badPercentMatch.Success))
+            if (!match.Success)
             {
                 var message = string.Format("The connection string '{0}' is not valid.", _originalConnectionString);
                 throw new MongoConfigurationException(message);
