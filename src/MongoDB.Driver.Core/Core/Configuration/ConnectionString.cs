@@ -779,7 +779,7 @@ namespace MongoDB.Driver.Core.Configuration
 
             ExtractScheme(match);
             ExtractUsernameAndPassword(match);
-            ExtractDatabaseName(match);v
+            ExtractDatabaseName(match);
             ExtractOptions(match);
             ExtractHosts(match);
         }
