@@ -747,22 +747,19 @@ namespace MongoDB.Driver.Core.Configuration
             return host;
         }
 
-#if !NETSTANDARD1_5
         private static bool AllPercentEncodingsAreValid(string value)
         {
-            for (var i = 0; i < value.Length; i++)
+            bool invalidPercentEncoding;
+            var invalidPercentPattern = @"%$|%.$|%[^0-9a-fA-F]|%[0-9a-fA-F][^0-9a-fA-F]";
+            invalidPercentEncoding = Regex.IsMatch(value, invalidPercentPattern);
+
+            if (invalidPercentEncoding)
             {
-                //Uri.IsHexEncoding is not in .NETStandard 1.5, which was my default on Rider
-                //also appears to not compile if I use .NETFramework
-                if (value[i] == '%' && !Uri.IsHexEncoding(value, i))
-                {
-                    return false;
-                }
+                return false;
             }
 
             return true;
         }
-#endif
 
         private void Parse()
         {
@@ -778,15 +775,8 @@ namespace MongoDB.Driver.Core.Configuration
 
             if (_originalConnectionString.Contains("%"))
             {
-                bool invalidPercentEncoding = false;
-#if NETSTANDARD1_5
-                var invalidPercentPattern = @"%$|%.$|%[^0-9a-fA-F]|%[0-9a-fA-F][^0-9a-fA-F]";
-                invalidPercentEncoding = Regex.IsMatch(_originalConnectionString, invalidPercentPattern);
-
-#else
-                invalidPercentEncoding = AllPercentEncodingsAreValid(_originalConnectionString);
-#endif
-                if (invalidPercentEncoding)
+                bool allPercentsValid = AllPercentEncodingsAreValid(_originalConnectionString);
+                if (!allPercentsValid)
                 {
                     var message = string.Format("The connection string '{0}' contains an invalid '%' escape sequence.",
                         _originalConnectionString);
