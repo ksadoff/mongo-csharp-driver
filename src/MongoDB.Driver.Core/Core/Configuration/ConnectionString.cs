@@ -747,20 +747,6 @@ namespace MongoDB.Driver.Core.Configuration
             return host;
         }
 
-        private static bool AllPercentEncodingsAreValid(string value)
-        {
-            bool invalidPercentEncoding;
-            var invalidPercentPattern = @"%$|%.$|%[^0-9a-fA-F]|%[0-9a-fA-F][^0-9a-fA-F]";
-            invalidPercentEncoding = Regex.IsMatch(value, invalidPercentPattern);
-
-            if (invalidPercentEncoding)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
         private void Parse()
         {
             const string serverPattern = @"(?<host>((\[[^]]+?\]|[^:@,/?#]+)(:\d+)?))";
@@ -775,8 +761,8 @@ namespace MongoDB.Driver.Core.Configuration
 
             if (_originalConnectionString.Contains("%"))
             {
-                bool allPercentsValid = AllPercentEncodingsAreValid(_originalConnectionString);
-                if (!allPercentsValid)
+                var invalidPercentPattern = @"%$|%.$|%[^0-9a-fA-F]|%[0-9a-fA-F][^0-9a-fA-F]";
+                if (Regex.IsMatch(_originalConnectionString, invalidPercentPattern))
                 {
                     var message = string.Format("The connection string '{0}' contains an invalid '%' escape sequence.",
                         _originalConnectionString);
@@ -793,7 +779,7 @@ namespace MongoDB.Driver.Core.Configuration
 
             ExtractScheme(match);
             ExtractUsernameAndPassword(match);
-            ExtractDatabaseName(match);
+            ExtractDatabaseName(match);v
             ExtractOptions(match);
             ExtractHosts(match);
         }
