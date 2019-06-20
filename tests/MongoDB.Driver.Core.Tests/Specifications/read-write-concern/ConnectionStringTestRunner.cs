@@ -60,6 +60,10 @@ namespace MongoDB.Driver.Specifications.read_write_concern.tests
 
         private void AssertValid(ConnectionString connectionString, BsonDocument definition)
         {
+            if (!definition["valid"].ToBoolean())
+            {
+                throw new AssertionException($"The connection string '{definition["uri"]}' should be invalid.");
+            }
 
             BsonValue readConcernValue;
             if (definition.TryGetValue("readConcern", out readConcernValue))
@@ -72,28 +76,13 @@ namespace MongoDB.Driver.Specifications.read_write_concern.tests
             BsonValue writeConcernValue;
             if (definition.TryGetValue("writeConcern", out writeConcernValue))
             {
-                try
-                {
-                    var writeConcern =
+                var writeConcern =
                         WriteConcern.FromBsonDocument(MassageWriteConcernDocument((BsonDocument) writeConcernValue));
-                    connectionString.W.Should().Be(writeConcern.W);
-                    connectionString.WTimeout.Should().Be(writeConcern.WTimeout);
-                    connectionString.Journal.Should().Be(writeConcern.Journal);
-                    connectionString.FSync.Should().Be(writeConcern.FSync);
-                }
-                //if invalid parameter combination
-                catch (Exception ex)
-                {
-                    AssertInvalid(ex, definition);
-                    return;
-                }
+                connectionString.W.Should().Be(writeConcern.W);
+                connectionString.WTimeout.Should().Be(writeConcern.WTimeout);
+                connectionString.Journal.Should().Be(writeConcern.Journal);
+                connectionString.FSync.Should().Be(writeConcern.FSync);
             }
-
-            if (!definition["valid"].ToBoolean())
-            {
-                throw new AssertionException($"The connection string '{definition["uri"]}' should be invalid.");
-            }
-
         }
 
         private void AssertInvalid(Exception ex, BsonDocument definition)

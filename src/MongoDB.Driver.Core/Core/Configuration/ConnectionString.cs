@@ -365,7 +365,7 @@ namespace MongoDB.Driver.Core.Configuration
         {
             get { return _readPreferenceTags; }
         }
-        
+
         /// <summary>
         /// Gets a value indicating whether or not to retry reads.
         /// </summary>
@@ -771,6 +771,11 @@ namespace MongoDB.Driver.Core.Configuration
             ExtractDatabaseName(match);
             ExtractOptions(match);
             ExtractHosts(match);
+
+            if (_journal.HasValue && _journal.Value && _w != null && _w.Equals(0))
+            {
+                throw new MongoConfigurationException("This is an invalid w and journal pair.");
+            }
         }
 
         private void ParseOption(string name, string value)
@@ -1111,7 +1116,7 @@ namespace MongoDB.Driver.Core.Configuration
         }
 
         private List<string> GetHostsFromResponse(IDnsQueryResponse response)
-        {         
+        {
             var hosts = new List<string>();
             foreach (var srvRecord in response.Answers.SrvRecords())
             {
@@ -1130,7 +1135,7 @@ namespace MongoDB.Driver.Core.Configuration
         {
             var txtRecords = response.Answers
                 .TxtRecords().ToList();
-            
+
             if (txtRecords.Count > 1)
             {
                 throw new MongoConfigurationException("Only 1 TXT record is allowed when using the SRV protocol.");
