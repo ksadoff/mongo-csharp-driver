@@ -135,12 +135,6 @@ namespace MongoDB.Driver
                 writeConcern = writeConcern.With(journal: j.ToBoolean());
             }
 
-            if (w != null && j != null && w.AsInt32 == 0 && j.AsBoolean)
-            {
-                var message = string.Format("The write concern '{0}' is not valid.", writeConcern);
-                throw new MongoConfigurationException(message);
-            }
-
             return writeConcern;
         }
         #endregion
@@ -201,6 +195,11 @@ namespace MongoDB.Driver
             _wTimeout = Ensure.IsNullOrGreaterThanZero(wTimeout.WithDefault(null), "wTimeout");
             _fsync = fsync.WithDefault(null);
             _journal = journal.WithDefault(null);
+
+            if (_w != null && w.Value.Equals(0) && _journal.HasValue && journal.Value.Equals(true))
+            {
+                throw new MongoConfigurationException("This write concern is not valid.");
+            }
         }
 
         // properties
