@@ -318,6 +318,7 @@ namespace MongoDB.Driver.Core.Connections
         {
             if (messageSize < 0 || messageSize > _description.MaxMessageSize)
             {
+                // What kind of exception to use here?
                 throw new MongoInternalException("The size of the message is invalid.");
             }
         }
@@ -326,7 +327,6 @@ namespace MongoDB.Driver.Core.Connections
             try
             {
                 var messageSizeBytes = new byte[4];
-                messageSizeBytes[0] = (Byte)(_description.MaxMessageSize);
                 _stream.ReadBytes(messageSizeBytes, 0, 4, _backgroundTaskCancellationToken);
                 var messageSize = BitConverter.ToInt32(messageSizeBytes, 0);
                 EnsureMessageSizeIsValid(messageSize);

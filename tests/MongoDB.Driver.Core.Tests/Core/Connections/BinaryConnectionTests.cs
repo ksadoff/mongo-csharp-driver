@@ -278,6 +278,45 @@ namespace MongoDB.Driver.Core.Connections
 
         [Theory]
         [ParameterAttributeData]
+        public void ReceiveMessage_should_throw_error_when_message_is_an_invalid_size(
+            [Values(-1, 16000005)]
+            int length,
+            [Values(false, true)]
+            bool async)
+        {
+            using (var stream = new BlockingMemoryStream())
+            {
+                var bytes = BitConverter.GetBytes(length);
+                stream.Write(bytes, 0, bytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                var encoderSelector = new ReplyMessageEncoderSelector<BsonDocument>(BsonDocumentSerializer.Instance);
+
+                Action received;
+                if (async)
+                {
+                    _mockStreamFactory.Setup(f => f.CreateStreamAsync(_endPoint, CancellationToken.None))
+                        .Returns(Task.FromResult<Stream>(stream));
+                    _subject.OpenAsync(CancellationToken.None).GetAwaiter().GetResult();
+                    received = () => _subject
+                        .ReceiveMessageAsync(10, encoderSelector, _messageEncoderSettings, CancellationToken.None)
+                        .GetAwaiter().GetResult();
+                }
+                else
+                {
+                    _mockStreamFactory.Setup(f => f.CreateStream(_endPoint, CancellationToken.None))
+                        .Returns(stream);
+                    _subject.Open(CancellationToken.None);
+
+                        received = () =>  _subject.ReceiveMessage(10, encoderSelector, _messageEncoderSettings, CancellationToken.None);
+                }
+
+                received.ShouldThrow<MongoConnectionException>()
+                    .WithInnerException<MongoInternalException>().WithInnerMessage("The size of the message is invalid.");
+            }
+        }
+
+        [Theory]
+        [ParameterAttributeData]
         public void ReceiveMessage_should_complete_when_reply_is_already_on_the_stream(
             [Values(false, true)]
             bool async)
