@@ -310,8 +310,9 @@ namespace MongoDB.Driver.Core.Connections
                     invalidSizeException = Record.Exception( () =>  _subject.ReceiveMessage(10, encoderSelector, _messageEncoderSettings, CancellationToken.None));
                 }
 
-                Assert.NotNull(invalidSizeException);
-                Assert.IsType<MongoInternalException>(invalidSizeException.InnerException);
+                invalidSizeException.Should().NotBe(null);
+                invalidSizeException.InnerException.Should().BeOfType<MongoInternalException>();
+                invalidSizeException.InnerException.Message.Should().Be("The size of the message is invalid.");
             }
         }
 
