@@ -291,15 +291,15 @@ namespace MongoDB.Driver.Core.Connections
                 stream.Seek(0, SeekOrigin.Begin);
                 var encoderSelector = new ReplyMessageEncoderSelector<BsonDocument>(BsonDocumentSerializer.Instance);
 
-                Action received;
+                Exception invalidSizeException;
                 if (async)
                 {
                     _mockStreamFactory.Setup(f => f.CreateStreamAsync(_endPoint, CancellationToken.None))
                         .Returns(Task.FromResult<Stream>(stream));
                     _subject.OpenAsync(CancellationToken.None).GetAwaiter().GetResult();
-                    received = () => _subject
+                    invalidSizeException = Record.Exception(() => _subject
                         .ReceiveMessageAsync(10, encoderSelector, _messageEncoderSettings, CancellationToken.None)
-                        .GetAwaiter().GetResult();
+                        .GetAwaiter().GetResult());
                 }
                 else
                 {
@@ -307,11 +307,11 @@ namespace MongoDB.Driver.Core.Connections
                         .Returns(stream);
                     _subject.Open(CancellationToken.None);
 
-                        received = () =>  _subject.ReceiveMessage(10, encoderSelector, _messageEncoderSettings, CancellationToken.None);
+                    invalidSizeException = Record.Exception( () =>  _subject.ReceiveMessage(10, encoderSelector, _messageEncoderSettings, CancellationToken.None));
                 }
 
-                received.ShouldThrow<MongoConnectionException>()
-                    .WithInnerException<MongoInternalException>().WithInnerMessage("The size of the message is invalid.");
+                Assert.NotNull(invalidSizeException);
+                Assert.IsType<MongoInternalException>(invalidSizeException.InnerException);
             }
         }
 
