@@ -126,14 +126,6 @@ namespace MongoDB.Driver.Core.Connections
             get { return _endPoint; }
         }
 
-        private void EnsureMessageSizeIsValid(Int32 messageSize)
-        {
-            if (messageSize < 0 || messageSize > _description.MaxMessageSize)
-            {
-                throw new FormatException("The size of the message is invalid.");
-            }
-        }
-
         public bool IsExpired
         {
             get
