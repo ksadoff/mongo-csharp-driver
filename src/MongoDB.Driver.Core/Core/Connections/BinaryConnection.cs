@@ -126,6 +126,14 @@ namespace MongoDB.Driver.Core.Connections
             get { return _endPoint; }
         }
 
+        private void EnsureMessageSizeIsValid(Int32 messageSize)
+        {
+            if (messageSize < 0 || messageSize > _description.MaxMessageSize)
+            {
+                throw new FormatException("The size of the message is invalid.");
+            }
+        }
+
         public bool IsExpired
         {
             get
@@ -217,6 +225,14 @@ namespace MongoDB.Driver.Core.Connections
                         _closedEventHandler(new ConnectionClosedEvent(_connectionId, stopwatch.Elapsed, EventContext.OperationId));
                     }
                 }
+            }
+        }
+
+        private void EnsureMessageSizeIsValid(Int32 messageSize)
+        {
+            if (messageSize < 0 || messageSize > _description.MaxMessageSize)
+            {
+                throw new FormatException("The size of the message is invalid.");
             }
         }
 
@@ -314,14 +330,6 @@ namespace MongoDB.Driver.Core.Connections
             }
         }
 
-        private void EnsureMessageSizeIsValid(Int32 messageSize)
-        {
-            if (messageSize < 0 || messageSize > _description.MaxMessageSize)
-            {
-                // What kind of exception to use here?
-                throw new MongoInternalException("The size of the message is invalid.");
-            }
-        }
         private IByteBuffer ReceiveBuffer()
         {
             try

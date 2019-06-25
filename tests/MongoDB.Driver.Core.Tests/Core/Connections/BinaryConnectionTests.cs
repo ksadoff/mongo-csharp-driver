@@ -53,18 +53,18 @@ namespace MongoDB.Driver.Core.Connections
 
             _endPoint = new DnsEndPoint("localhost", 27017);
             var serverId = new ServerId(new ClusterId(), _endPoint);
+            var connectionId = new ConnectionId(serverId);
+            var isMasterResult = new IsMasterResult(new BsonDocument { { "ok", 1 }, { "maxMessageSizeBytes", 48000000 } });
+            var buildInfoResult = new BuildInfoResult(new BsonDocument { { "ok", 1 }, { "version", "2.6.3" } });
+            var connectionDescription = new ConnectionDescription(connectionId, isMasterResult, buildInfoResult);
 
             _mockConnectionInitializer = new Mock<IConnectionInitializer>();
-            _mockConnectionInitializer.Setup(i => i.InitializeConnection(It.IsAny<IConnection>(), CancellationToken.None))
-                .Returns(() => new ConnectionDescription(
-                    new ConnectionId(serverId),
-                    new IsMasterResult(new BsonDocument()),
-                    new BuildInfoResult(new BsonDocument("version", "2.6.3"))));
-            _mockConnectionInitializer.Setup(i => i.InitializeConnectionAsync(It.IsAny<IConnection>(), CancellationToken.None))
-                .Returns(() => Task.FromResult(new ConnectionDescription(
-                    new ConnectionId(serverId),
-                    new IsMasterResult(new BsonDocument()),
-                    new BuildInfoResult(new BsonDocument("version", "2.6.3")))));
+            _mockConnectionInitializer
+                .Setup(i => i.InitializeConnection(It.IsAny<IConnection>(), CancellationToken.None))
+                .Returns(connectionDescription);
+            _mockConnectionInitializer
+                .Setup(i => i.InitializeConnectionAsync(It.IsAny<IConnection>(), CancellationToken.None))
+                .Returns(Task.FromResult(connectionDescription));
 
             _subject = new BinaryConnection(
                 serverId: serverId,
@@ -214,6 +214,46 @@ namespace MongoDB.Driver.Core.Connections
 
         [Theory]
         [ParameterAttributeData]
+        public void ReceiveMessage_should_throw_a_FormatException_when_message_is_an_invalid_size(
+            [Values(-1, 48000001)]
+            int length,
+            [Values(false, true)]
+            bool async)
+        {
+            using (var stream = new BlockingMemoryStream())
+            {
+                var bytes = BitConverter.GetBytes(length);
+                stream.Write(bytes, 0, bytes.Length);
+                stream.Seek(0, SeekOrigin.Begin);
+                var encoderSelector = new ReplyMessageEncoderSelector<BsonDocument>(BsonDocumentSerializer.Instance);
+
+                Exception exception;
+                if (async)
+                {
+                    _mockStreamFactory.Setup(f => f.CreateStreamAsync(_endPoint, CancellationToken.None))
+                        .Returns(Task.FromResult<Stream>(stream));
+                    _subject.OpenAsync(CancellationToken.None).GetAwaiter().GetResult();
+                    exception = Record.Exception(() => _subject
+                        .ReceiveMessageAsync(10, encoderSelector, _messageEncoderSettings, CancellationToken.None)
+                        .GetAwaiter().GetResult());
+                }
+                else
+                {
+                    _mockStreamFactory.Setup(f => f.CreateStream(_endPoint, CancellationToken.None))
+                        .Returns(stream);
+                    _subject.Open(CancellationToken.None);
+
+                    exception = Record.Exception( () =>  _subject.ReceiveMessage(10, encoderSelector, _messageEncoderSettings, CancellationToken.None));
+                }
+
+                exception.Should().BeOfType<MongoConnectionException>();
+                exception.InnerException.Should().BeOfType<FormatException>();
+                exception.InnerException.Message.Should().Be("The size of the message is invalid.");
+            }
+        }
+
+        [Theory]
+        [ParameterAttributeData]
         public void ReceiveMessage_should_throw_an_ArgumentNullException_when_the_encoderSelector_is_null(
             [Values(false, true)]
             bool async)
@@ -274,46 +314,6 @@ namespace MongoDB.Driver.Core.Connections
             }
 
             act.ShouldThrow<InvalidOperationException>();
-        }
-
-        [Theory]
-        [ParameterAttributeData]
-        public void ReceiveMessage_should_throw_error_when_message_is_an_invalid_size(
-            [Values(-1, 16000005)]
-            int length,
-            [Values(false, true)]
-            bool async)
-        {
-            using (var stream = new BlockingMemoryStream())
-            {
-                var bytes = BitConverter.GetBytes(length);
-                stream.Write(bytes, 0, bytes.Length);
-                stream.Seek(0, SeekOrigin.Begin);
-                var encoderSelector = new ReplyMessageEncoderSelector<BsonDocument>(BsonDocumentSerializer.Instance);
-
-                Exception invalidSizeException;
-                if (async)
-                {
-                    _mockStreamFactory.Setup(f => f.CreateStreamAsync(_endPoint, CancellationToken.None))
-                        .Returns(Task.FromResult<Stream>(stream));
-                    _subject.OpenAsync(CancellationToken.None).GetAwaiter().GetResult();
-                    invalidSizeException = Record.Exception(() => _subject
-                        .ReceiveMessageAsync(10, encoderSelector, _messageEncoderSettings, CancellationToken.None)
-                        .GetAwaiter().GetResult());
-                }
-                else
-                {
-                    _mockStreamFactory.Setup(f => f.CreateStream(_endPoint, CancellationToken.None))
-                        .Returns(stream);
-                    _subject.Open(CancellationToken.None);
-
-                    invalidSizeException = Record.Exception( () =>  _subject.ReceiveMessage(10, encoderSelector, _messageEncoderSettings, CancellationToken.None));
-                }
-
-                invalidSizeException.Should().NotBe(null);
-                invalidSizeException.InnerException.Should().BeOfType<MongoInternalException>();
-                invalidSizeException.InnerException.Message.Should().Be("The size of the message is invalid.");
-            }
         }
 
         [Theory]
