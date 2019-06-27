@@ -64,7 +64,7 @@ namespace MongoDB.Driver.Core.Connections
                 .Returns(connectionDescription);
             _mockConnectionInitializer
                 .Setup(i => i.InitializeConnectionAsync(It.IsAny<IConnection>(), CancellationToken.None))
-                .Returns(Task.FromResult(connectionDescription));
+                .ReturnsAsync(connectionDescription);
 
             _subject = new BinaryConnection(
                 serverId: serverId,
@@ -230,12 +230,13 @@ namespace MongoDB.Driver.Core.Connections
                 Exception exception;
                 if (async)
                 {
-                    _mockStreamFactory.Setup(f => f.CreateStreamAsync(_endPoint, CancellationToken.None))
-                        .Returns(Task.FromResult<Stream>(stream));
+                    _mockStreamFactory
+                        .Setup(f => f.CreateStreamAsync(_endPoint, CancellationToken.None))
+                        .ReturnsAsync(stream);
                     _subject.OpenAsync(CancellationToken.None).GetAwaiter().GetResult();
-                    exception = Record.Exception(() => _subject
-                        .ReceiveMessageAsync(10, encoderSelector, _messageEncoderSettings, CancellationToken.None)
-                        .GetAwaiter().GetResult());
+                    exception = Record
+                        .ExceptionAsync(async () => await _subject.ReceiveMessageAsync(10, encoderSelector, _messageEncoderSettings, CancellationToken.None))
+                        .GetAwaiter().GetResult();
                 }
                 else
                 {
@@ -247,8 +248,8 @@ namespace MongoDB.Driver.Core.Connections
                 }
 
                 exception.Should().BeOfType<MongoConnectionException>();
-                exception.InnerException.Should().BeOfType<FormatException>();
-                exception.InnerException.Message.Should().Be("The size of the message is invalid.");
+                var e = exception.InnerException.Should().BeOfType<FormatException>().Subject;
+                e.Message.Should().Be("The size of the message is invalid.");
             }
         }
 

@@ -220,11 +220,13 @@ namespace MongoDB.Driver.Core.Connections
             }
         }
 
-        private void EnsureMessageSizeIsValid(Int32 messageSize)
+        private void EnsureMessageSizeIsValid(int messageSize)
         {
-            if (messageSize < 0 || messageSize > _description.MaxMessageSize)
+            var maxMessageSize = _description?.MaxMessageSize ?? 48000000;
+
+            if (messageSize < 0 || messageSize > maxMessageSize)
             {
-                throw new FormatException("The size of the message is invalid.");
+                    throw new FormatException("The size of the message is invalid.");
             }
         }
 
