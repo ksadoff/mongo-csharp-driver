@@ -226,7 +226,7 @@ namespace MongoDB.Driver.Core.Connections
 
             if (messageSize < 0 || messageSize > maxMessageSize)
             {
-                    throw new FormatException("The size of the message is invalid.");
+                throw new FormatException("The size of the message is invalid.");
             }
         }
 
