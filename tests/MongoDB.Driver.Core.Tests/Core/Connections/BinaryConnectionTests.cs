@@ -235,9 +235,9 @@ namespace MongoDB.Driver.Core.Connections
                         .ReturnsAsync(stream);
                     _subject.OpenAsync(CancellationToken.None).GetAwaiter().GetResult();
                     exception = Record
-                        .ExceptionAsync(async () => await _subject.ReceiveMessageAsync(10, encoderSelector, _messageEncoderSettings, CancellationToken.None))
+                        .Exception(() => _subject.ReceiveMessageAsync(10, encoderSelector, _messageEncoderSettings, CancellationToken.None)
                         .GetAwaiter()
-                        .GetResult();
+                        .GetResult());
                 }
                 else
                 {
