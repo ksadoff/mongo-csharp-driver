@@ -22,12 +22,16 @@ using FluentAssertions;
 using MongoDB.Bson;
 using MongoDB.Bson.TestHelpers;
 using MongoDB.Bson.TestHelpers.XunitExtensions;
+using MongoDB.Driver.Core;
 using MongoDB.Driver.Core.Bindings;
 using MongoDB.Driver.Core.Clusters;
 using MongoDB.Driver.Core.Clusters.ServerSelectors;
+using MongoDB.Driver.Core.Events;
 using MongoDB.Driver.Core.Operations;
 using MongoDB.Driver.Core.Servers;
 using MongoDB.Driver.Core.TestHelpers;
+using MongoDB.Driver.Core.TestHelpers.XunitExtensions;
+using MongoDB.Driver.TestHelpers;
 using Moq;
 using Xunit;
 
@@ -204,6 +208,36 @@ namespace MongoDB.Driver.Tests
             var operation = call.Operation.Should().BeOfType<ListDatabasesOperation>().Subject;
             operation.NameOnly.Should().Be(true);
             databaseNames.Should().Equal(operationResult["databases"].AsBsonArray.Select(record => record["name"].AsString));
+        }
+
+        // will probably need to move this test?
+        [Theory]
+        [ParameterAttributeData]
+        public void ReadPreference_should_not_be_sent_to_standalone_server(
+            [Values(false, true)] bool async)
+        {
+            RequireServer.Check().ClusterType(ClusterType.Standalone);
+            var cancellationToken = new CancellationTokenSource().Token;
+            var eventCapturer = new EventCapturer().Capture<CommandStartedEvent>(e => e.CommandName.Equals("listDatabases"));
+            using (var subject = CreateDisposableClient(eventCapturer))
+            {
+                var database = subject.GetDatabase(DriverTestConfiguration.DatabaseNamespace.DatabaseName);
+                var collection = database.GetCollection<BsonDocument>(DriverTestConfiguration.CollectionNamespace.CollectionName);
+                var options = new ListDatabasesOptions();
+                if (async)
+                {
+                    subject.ListDatabasesAsync(options, cancellationToken).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    subject.ListDatabases(options, cancellationToken);
+                }
+
+            }
+
+            // how to get the command message which has read preference?
+            var result = eventCapturer.Events[0].ToBsonDocument();
+            result.ToDictionary().Should().NotContainKey("readPreference");
         }
 
         private IAsyncCursor<BsonDocument> CreateListDatabasesOperationCursor(BsonDocument reply)
@@ -416,6 +450,14 @@ namespace MongoDB.Driver.Tests
         }
 
         // private methods
+        private DisposableMongoClient CreateDisposableClient(EventCapturer eventCapturer)
+        {
+            return DriverTestConfiguration.CreateDisposableClient((MongoClientSettings settings) =>
+            {
+                settings.ClusterConfigurator = c => c.Subscribe(eventCapturer);
+            });
+        }
+
         private IClientSessionHandle CreateClientSession()
         {
             var client = new Mock<IMongoClient>().Object;
