@@ -211,7 +211,7 @@ namespace MongoDB.Driver.Tests
         }
 
         // will probably need to move this test?
-        [Theory]
+        [SkippableTheory]
         [ParameterAttributeData]
         public void ReadPreference_should_not_be_sent_to_standalone_server(
             [Values(false, true)] bool async)
