@@ -235,7 +235,6 @@ namespace MongoDB.Driver.Tests
 
             }
 
-            // how to get the command message which has read preference?
             var result = eventCapturer.Events[0].ToBsonDocument();
             result.ToDictionary().Should().NotContainKey("readPreference");
         }
