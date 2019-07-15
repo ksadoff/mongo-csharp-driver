@@ -192,7 +192,9 @@ namespace MongoDB.Driver.Core.WireProtocol
             extraElements.Add(dbElement);
 
             // if standalone, don't send read preference
-            if (connectionDescription.IsMasterResult.ServerType != ServerType.Standalone && _readPreference != null && _readPreference != ReadPreference.Primary)
+            if (connectionDescription.IsMasterResult.ServerType != ServerType.Standalone
+                && _readPreference != null
+                && _readPreference != ReadPreference.Primary)
             {
                 var readPreferenceDocument = QueryHelper.CreateReadPreferenceDocument(_readPreference);
                 var readPreferenceElement = new BsonElement("$readPreference", readPreferenceDocument);

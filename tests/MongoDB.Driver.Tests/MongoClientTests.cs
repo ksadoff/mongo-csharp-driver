@@ -217,22 +217,20 @@ namespace MongoDB.Driver.Tests
             [Values(false, true)] bool async)
         {
             RequireServer.Check().ClusterType(ClusterType.Standalone);
-            var cancellationToken = new CancellationTokenSource().Token;
-            var eventCapturer = new EventCapturer().Capture<CommandStartedEvent>(e => e.CommandName.Equals("listDatabases"));
-            using (var subject = CreateDisposableClient(eventCapturer))
+            var eventCapturer = new EventCapturer().Capture<CommandStartedEvent>(e => e.CommandName.Equals("find"));
+            using (var subject = new DisposableMongoClient(CreateDisposableClient(eventCapturer).WithReadPreference(ReadPreference.Secondary)))
             {
                 var database = subject.GetDatabase(DriverTestConfiguration.DatabaseNamespace.DatabaseName);
                 var collection = database.GetCollection<BsonDocument>(DriverTestConfiguration.CollectionNamespace.CollectionName);
-                var options = new ListDatabasesOptions();
+
                 if (async)
                 {
-                    subject.ListDatabasesAsync(options, cancellationToken).GetAwaiter().GetResult();
+                    collection.FindAsync("{x: 2}").GetAwaiter().GetResult();
                 }
                 else
                 {
-                    subject.ListDatabases(options, cancellationToken);
+                    collection.FindSync("{x: 2}");
                 }
-
             }
 
             var result = eventCapturer.Events[0].ToBsonDocument();
