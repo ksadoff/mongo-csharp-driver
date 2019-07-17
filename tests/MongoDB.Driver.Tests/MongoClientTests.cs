@@ -225,11 +225,11 @@ namespace MongoDB.Driver.Tests
 
                 if (async)
                 {
-                    collection.FindAsync("{x: 2}").GetAwaiter().GetResult();
+                    collection.FindAsync("{ x : 2 }").GetAwaiter().GetResult();
                 }
                 else
                 {
-                    collection.FindSync("{x: 2}");
+                    collection.FindSync("{ x : 2 }");
                 }
             }
 
