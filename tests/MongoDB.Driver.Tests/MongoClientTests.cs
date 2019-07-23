@@ -210,33 +210,6 @@ namespace MongoDB.Driver.Tests
             databaseNames.Should().Equal(operationResult["databases"].AsBsonArray.Select(record => record["name"].AsString));
         }
 
-        // will probably need to move this test?
-        [SkippableTheory]
-        [ParameterAttributeData]
-        public void ReadPreference_should_not_be_sent_to_standalone_server(
-            [Values(false, true)] bool async)
-        {
-            RequireServer.Check().ClusterType(ClusterType.Standalone);
-            var eventCapturer = new EventCapturer().Capture<CommandStartedEvent>(e => e.CommandName.Equals("find"));
-            using (var subject = CreateDisposableClient(eventCapturer, ReadPreference.Secondary))
-            {
-                var database = subject.GetDatabase(DriverTestConfiguration.DatabaseNamespace.DatabaseName);
-                var collection = database.GetCollection<BsonDocument>(DriverTestConfiguration.CollectionNamespace.CollectionName);
-
-                if (async)
-                {
-                    collection.FindAsync("{ x : 2 }").GetAwaiter().GetResult();
-                }
-                else
-                {
-                    collection.FindSync("{ x : 2 }");
-                }
-            }
-
-            var result = eventCapturer.Events[0].ToBsonDocument();
-            result.GetElement("Command").ToBsonDocument().ToDictionary().Should().NotContainKey("readPreference");
-        }
-
         private IAsyncCursor<BsonDocument> CreateListDatabasesOperationCursor(BsonDocument reply)
         {
             var databases = reply["databases"].AsBsonArray.OfType<BsonDocument>();
@@ -447,15 +420,6 @@ namespace MongoDB.Driver.Tests
         }
 
         // private methods
-        private DisposableMongoClient CreateDisposableClient(EventCapturer eventCapturer, ReadPreference readPreference)
-        {
-            return DriverTestConfiguration.CreateDisposableClient((MongoClientSettings settings) =>
-            {
-                settings.ClusterConfigurator = c => c.Subscribe(eventCapturer);
-                settings.ReadPreference = readPreference;
-            });
-        }
-
         private IClientSessionHandle CreateClientSession()
         {
             var client = new Mock<IMongoClient>().Object;
