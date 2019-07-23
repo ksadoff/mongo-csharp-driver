@@ -67,7 +67,7 @@ namespace MongoDB.Driver.Tests
             using (var client = DriverTestConfiguration.CreateDisposableClient(eventCapturer))
             {
                 IAsyncCursor<BsonDocument> cursor;
-                var database = client.GetDatabase("admin");
+                var database = client.GetDatabase("test");
                 var collection = database.GetCollection<BsonDocument>(GetType().Name);
                 var documents = new List<BsonDocument>();
                 for (int i = 0; i < 1000; i++)
