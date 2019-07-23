@@ -15,6 +15,7 @@
 
 using System.Collections.Generic;
 using FluentAssertions;
+using FluentAssertions.Common;
 using MongoDB.Bson;
 using MongoDB.Bson.TestHelpers;
 using MongoDB.Bson.TestHelpers.XunitExtensions;
@@ -90,16 +91,14 @@ namespace MongoDB.Driver.Tests
                 }
 
                 long cursorId;
-                using (cursor)
-                {
-                    cursorId = ((AsyncCursor<BsonDocument>) cursor)._cursorId();
-                    cursorId.Should().NotBe(0);
-                }
+                cursorId = ((AsyncCursor<BsonDocument>) cursor)._cursorId();
+                cursorId.Should().NotBe(0);
+                cursor.Dispose();
 
                 var desiredResult = BsonDocument.Parse($"{{ \"cursorsKilled\" : [{cursorId}], \"cursorsNotFound\" : [], " +
                     $"\"cursorsAlive\" : [], \"cursorsUnknown\" : [], \"ok\" : 1.0 }}");
                 var result = ((CommandSucceededEvent) eventCapturer.Events[0]).Reply;
-                result.Should().Be(desiredResult);
+                result.IsSameOrEqualTo(desiredResult);
             }
         }
 
