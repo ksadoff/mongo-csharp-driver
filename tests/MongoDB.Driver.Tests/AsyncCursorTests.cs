@@ -13,6 +13,7 @@
 * limitations under the License.
 */
 
+using System.Collections.Generic;
 using FluentAssertions;
 using MongoDB.Bson;
 using MongoDB.Bson.TestHelpers;
@@ -68,23 +69,21 @@ namespace MongoDB.Driver.Tests
                 IAsyncCursor<BsonDocument> cursor;
                 var database = client.GetDatabase("admin");
                 var collection = database.GetCollection<BsonDocument>(GetType().Name);
+                var documents = new List<BsonDocument>();
+                for (int i = 0; i < 1000; i++)
+                {
+                    documents.Add(new BsonDocument("x", i));
+                }
+
                 if (async)
                 {
-                    for (int i = 0; i < 1000; i++)
-                    {
-                        collection.InsertOneAsync(new BsonDocument("x", i)).GetAwaiter().GetResult();
-                    }
-
+                    collection.InsertManyAsync(documents).GetAwaiter().GetResult();
                     cursor = collection.FindAsync("{}").GetAwaiter().GetResult();
                     cursor.MoveNextAsync().GetAwaiter().GetResult();
                 }
                 else
                 {
-                    for (int i = 0; i < 1000; i++)
-                    {
-                        collection.InsertOne(new BsonDocument("x", i));
-                    }
-
+                    collection.InsertMany(documents);
                     cursor = collection.FindSync("{}");
                     cursor.MoveNext();
 
