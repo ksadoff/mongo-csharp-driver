@@ -58,10 +58,8 @@ namespace MongoDB.Driver.Tests
             }
         }
 
-        [SkippableTheory]
-        [ParameterAttributeData]
-        public void KillCursor_should_actually_work(
-            [Values(false, true)] bool async)
+        [SkippableFact]
+        public void KillCursor_should_actually_work()
         {
             RequireServer.Check().Supports(Feature.KillCursorsCommand);
             var eventCapturer = new EventCapturer().Capture<CommandSucceededEvent>(x => x.CommandName.Equals("killCursors"));
@@ -76,22 +74,11 @@ namespace MongoDB.Driver.Tests
                     documents.Add(new BsonDocument("x", i));
                 }
 
-                if (async)
-                {
-                    collection.InsertManyAsync(documents).GetAwaiter().GetResult();
-                    cursor = collection.FindAsync("{}").GetAwaiter().GetResult();
-                    cursor.MoveNextAsync().GetAwaiter().GetResult();
-                }
-                else
-                {
-                    collection.InsertMany(documents);
-                    cursor = collection.FindSync("{}");
-                    cursor.MoveNext();
+                collection.InsertMany(documents);
+                cursor = collection.FindSync("{}");
+                cursor.MoveNext();
 
-                }
-
-                long cursorId;
-                cursorId = ((AsyncCursor<BsonDocument>) cursor)._cursorId();
+                var cursorId = ((AsyncCursor<BsonDocument>) cursor)._cursorId();
                 cursorId.Should().NotBe(0);
                 cursor.Dispose();
 
