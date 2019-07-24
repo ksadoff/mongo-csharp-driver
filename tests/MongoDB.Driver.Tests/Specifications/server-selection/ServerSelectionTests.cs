@@ -27,12 +27,11 @@ namespace MongoDB.Driver.Tests
 {
     public class ServerSelectionTest
     {
-        [SkippableTheory]
+        [Theory]
         [ParameterAttributeData]
         public void ReadPreference_should_not_be_sent_to_standalone_server(
             [Values(false, true)] bool async)
         {
-            RequireServer.Check().ClusterType(ClusterType.Standalone);
             var eventCapturer = new EventCapturer().Capture<CommandStartedEvent>(e => e.CommandName.Equals("find"));
             using (var subject = CreateDisposableClient(eventCapturer, ReadPreference.Secondary))
             {
@@ -47,10 +46,18 @@ namespace MongoDB.Driver.Tests
                 {
                     collection.FindSync("{ x : 2 }");
                 }
-            }
 
-            var resultCommand = ((CommandStartedEvent)eventCapturer.Events[0]).Command;
-            resultCommand.Contains("$readPreference").Should().BeFalse();
+                var resultCommand = ((CommandStartedEvent)eventCapturer.Events[0]).Command;
+
+                if (subject.Cluster.Description.Type == ClusterType.Standalone)
+                {
+                    resultCommand.Contains("$readPreference").Should().BeFalse();
+                }
+                else
+                {
+                    resultCommand.Contains("$readPreference").Should().BeTrue();
+                }
+            }
         }
 
         // private methods
