@@ -13,6 +13,7 @@
 * limitations under the License.
 */
 
+using System;
 using FluentAssertions;
 using MongoDB.Bson;
 using MongoDB.Bson.TestHelpers.XunitExtensions;
@@ -48,13 +49,16 @@ namespace MongoDB.Driver.Tests
 
                 var resultCommand = ((CommandStartedEvent)eventCapturer.Events[0]).Command;
 
+                var clusterType = subject.Cluster.Description.Type;
                 if (subject.Cluster.Description.Type == ClusterType.Standalone)
                 {
-                    resultCommand.Contains("$readPreference").Should().BeFalse();
+                    throw new Exception($"async is {async}, cluster type is {clusterType}, command is {resultCommand}");
+//                    resultCommand.Contains("$readPreference").Should().BeFalse();
                 }
                 else
                 {
-                    resultCommand.Contains("$readPreference").Should().BeTrue();
+                    throw new Exception($"async is {async}, cluster type is {clusterType}, command is {resultCommand}");
+//                    resultCommand.Contains("$readPreference").Should().BeTrue();
                 }
             }
         }
