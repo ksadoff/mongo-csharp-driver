@@ -33,7 +33,7 @@ namespace MongoDB.Driver.Tests
             [Values(false, true)] bool async)
         {
             var eventCapturer = new EventCapturer().Capture<CommandStartedEvent>(e => e.CommandName.Equals("find"));
-            using (var subject = CreateDisposableClient(eventCapturer, ReadPreference.Secondary))
+            using (var subject = CreateDisposableClient(eventCapturer, ReadPreference.PrimaryPreferred))
             {
                 var database = subject.GetDatabase(DriverTestConfiguration.DatabaseNamespace.DatabaseName);
                 var collection = database.GetCollection<BsonDocument>(DriverTestConfiguration.CollectionNamespace.CollectionName);
@@ -52,13 +52,13 @@ namespace MongoDB.Driver.Tests
                 var clusterType = subject.Cluster.Description.Type;
                 if (subject.Cluster.Description.Type == ClusterType.Standalone)
                 {
-                    throw new Exception($"async is {async}, cluster type is {clusterType}, command is {resultCommand}");
-//                    resultCommand.Contains("$readPreference").Should().BeFalse();
+//                    throw new Exception($"async is {async}, cluster type is {clusterType}, command is {resultCommand}");
+                    resultCommand.Contains("$readPreference").Should().BeFalse();
                 }
                 else
                 {
-                    throw new Exception($"async is {async}, cluster type is {clusterType}, command is {resultCommand}");
-//                    resultCommand.Contains("$readPreference").Should().BeTrue();
+//                    throw new Exception($"async is {async}, cluster type is {clusterType}, command is {resultCommand}");
+                    resultCommand.Contains("$readPreference").Should().BeTrue();
                 }
             }
         }
