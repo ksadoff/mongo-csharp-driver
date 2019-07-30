@@ -13,25 +13,27 @@
 * limitations under the License.
 */
 
-using System;
 using FluentAssertions;
 using MongoDB.Bson;
 using MongoDB.Bson.TestHelpers.XunitExtensions;
 using MongoDB.Driver.Core;
 using MongoDB.Driver.Core.Clusters;
 using MongoDB.Driver.Core.Events;
+using MongoDB.Driver.Core.Misc;
+using MongoDB.Driver.Core.TestHelpers.XunitExtensions;
 using MongoDB.Driver.TestHelpers;
 using Xunit;
 
-namespace MongoDB.Driver.Tests
+namespace MongoDB.Driver.Tests.Specifications.server_selection
 {
     public class ServerSelectionTest
     {
-        [Theory]
+        [SkippableTheory]
         [ParameterAttributeData]
         public void ReadPreference_should_not_be_sent_to_standalone_server(
             [Values(false, true)] bool async)
         {
+            RequireServer.Check().Supports(Feature.CommandMessage);
             var eventCapturer = new EventCapturer().Capture<CommandStartedEvent>(e => e.CommandName.Equals("find"));
             using (var subject = CreateDisposableClient(eventCapturer, ReadPreference.PrimaryPreferred))
             {
@@ -49,15 +51,12 @@ namespace MongoDB.Driver.Tests
 
                 var resultCommand = ((CommandStartedEvent)eventCapturer.Events[0]).Command;
 
-                var clusterType = subject.Cluster.Description.Type;
                 if (subject.Cluster.Description.Type == ClusterType.Standalone)
                 {
-//                    throw new Exception($"async is {async}, cluster type is {clusterType}, command is {resultCommand}");
                     resultCommand.Contains("$readPreference").Should().BeFalse();
                 }
                 else
                 {
-//                    throw new Exception($"async is {async}, cluster type is {clusterType}, command is {resultCommand}");
                     resultCommand.Contains("$readPreference").Should().BeTrue();
                 }
             }
