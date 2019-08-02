@@ -1039,7 +1039,7 @@ namespace MongoDB.Driver.Core.Connections
                             if (element.Name.StartsWith("$"))
                             {
                                 // should we actually remove the $ or not?
-                                command[element.Name.Substring(0)] = element.Value;
+                                command[element.Name.Substring(1)] = element.Value;
                             }
                             else
                             {
