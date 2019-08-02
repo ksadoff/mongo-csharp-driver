@@ -13,8 +13,6 @@
 * limitations under the License.
 */
 
-using System;
-using System.Threading;
 using FluentAssertions;
 using MongoDB.Bson;
 using MongoDB.Bson.TestHelpers.XunitExtensions;
@@ -22,7 +20,6 @@ using MongoDB.Driver.Core;
 using MongoDB.Driver.Core.Clusters;
 using MongoDB.Driver.Core.Events;
 using MongoDB.Driver.Core.Misc;
-using MongoDB.Driver.Core.TestHelpers.XunitExtensions;
 using MongoDB.Driver.TestHelpers;
 using Xunit;
 
@@ -43,39 +40,35 @@ namespace MongoDB.Driver.Tests.Specifications.server_selection
 
                 if (async)
                 {
-                    collection.FindAsync("{ x : 2 }").GetAwaiter().GetResult();
+                    var _ = collection.FindAsync("{ x : 2 }").GetAwaiter().GetResult();
                 }
                 else
                 {
-                    collection.FindSync("{ x : 2 }");
+                    var _ = collection.FindSync("{ x : 2 }");
                 }
 
-                BsonDocument resultCommand;
+                BsonDocument sentCommand = ((CommandStartedEvent)eventCapturer.Events[0]).Command;;
                 var serverVersion = subject.Cluster.Description.Servers[0].Version;
 
                 if (subject.Cluster.Description.Type == ClusterType.Standalone)
                 {
-                    resultCommand = ((CommandStartedEvent)eventCapturer.Events[0]).Command;
-
-                    resultCommand.Contains("readPreference").Should().BeFalse();
+                    sentCommand.Contains("readPreference").Should().BeFalse();
                 }
                 else if (subject.Cluster.Description.Type == ClusterType.Sharded &&
                          serverVersion < Feature.CommandMessage.FirstSupportedVersion)
                 {
-                    resultCommand = ((CommandStartedEvent)eventCapturer.Events[0]).Command;
                     if (((CommandStartedEvent) eventCapturer.Events[0]).CommandName.Equals("$query"))
                     {
-                        resultCommand.Contains("$readPreference").Should().BeTrue();
+                        sentCommand.Contains("$readPreference").Should().BeTrue();
                     }
                     else if (((CommandStartedEvent) eventCapturer.Events[0]).CommandName.Equals("find"))
                     {
-                        resultCommand.Contains("readPreference").Should().BeTrue();
+                        sentCommand.Contains("readPreference").Should().BeTrue();
                     }
                 }
                 else if (serverVersion >= Feature.CommandMessage.FirstSupportedVersion)
                 {
-                    resultCommand = ((CommandStartedEvent)eventCapturer.Events[0]).Command;
-                    resultCommand.Contains("$readPreference").Should().BeTrue();
+                    sentCommand.Contains("$readPreference").Should().BeTrue();
                 }
             }
         }
