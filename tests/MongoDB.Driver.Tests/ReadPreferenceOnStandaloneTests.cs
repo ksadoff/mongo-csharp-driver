@@ -23,9 +23,9 @@ using MongoDB.Driver.Core.Misc;
 using MongoDB.Driver.TestHelpers;
 using Xunit;
 
-namespace MongoDB.Driver.Tests.Specifications.server_selection
+namespace MongoDB.Driver.Tests
 {
-    public class ServerSelectionTest
+    public class ReadPreferenceOnStandaloneTests
     {
         [Theory]
         [ParameterAttributeData]
