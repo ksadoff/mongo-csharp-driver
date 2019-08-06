@@ -285,29 +285,26 @@ namespace MongoDB.Driver.Core.Authentication
             connection.EnqueueReplyMessage(saslStartReply);
             connection.EnqueueReplyMessage(saslContinueReply);
 
-            Action act;
             if (async)
             {
-                act = () => subject.AuthenticateAsync(connection, __description, CancellationToken.None).GetAwaiter()
+                subject.AuthenticateAsync(connection, __description, CancellationToken.None).GetAwaiter()
                     .GetResult();
             }
             else
             {
-                act = () => subject.Authenticate(connection, __description, CancellationToken.None);
+                subject.Authenticate(connection, __description, CancellationToken.None);
             }
 
-            var exception = Record.Exception(act);
-            exception.Should().BeNull();
             SpinWait.SpinUntil(() => connection.GetSentMessages().Count >= 2, TimeSpan.FromSeconds(5)).Should()
                 .BeTrue();
 
             subject._cache().Should().NotBe(null);
             subject._cache()._cacheKey().Should().NotBe(null);
-            subject._cache()._cacheValue().Should().NotBe(null);
+            subject._cache()._cacheEntry().Should().NotBe(null);
         }
     }
 
-    internal static class AuthenticatorReflector
+    internal static class ScramShaAuthenticatorReflector
     {
         public static ScramCache _cache(this ScramShaAuthenticator obj) =>
              (ScramCache)Reflector.GetFieldValue(Reflector.GetFieldValue(obj, "_mechanism"), nameof(_cache));
@@ -316,13 +313,13 @@ namespace MongoDB.Driver.Core.Authentication
 
     internal static class CacheKeyReflector
     {
-        public static CacheKey _cacheKey (this ScramCache obj) =>
-            (CacheKey)Reflector.GetFieldValue(obj, nameof(_cacheKey));
+        public static ScramCacheKey _cacheKey (this ScramCache obj) =>
+            (ScramCacheKey)Reflector.GetFieldValue(obj, nameof(_cacheKey));
     }
 
-    internal static class CacheValueReflector
+    internal static class CacheEntryReflector
     {
-        public static CacheValue _cacheValue (this ScramCache obj) =>
-            (CacheValue)Reflector.GetFieldValue(obj, nameof(_cacheValue));
+        public static ScramCacheEntry _cacheEntry (this ScramCache obj) =>
+            (ScramCacheEntry)Reflector.GetFieldValue(obj, nameof(_cacheEntry));
     }
 }

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 
 namespace MongoDB.Driver.Core.Authentication
 {
@@ -30,11 +31,11 @@ namespace MongoDB.Driver.Core.Authentication
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public Object Get(Object key)
+        public ScramCacheEntry Get(Object key)
         {
             if (_cacheKey != null && _cacheKey.Equals(key))
             {
-                return _cacheValue;
+                return (ScramCacheEntry)_cacheValue;
             }
 
             return null;
@@ -52,77 +53,66 @@ namespace MongoDB.Driver.Core.Authentication
         }
     }
 
-    internal class CacheKey
+    internal class ScramCacheKey
     {
-        private byte[] hashedPasswordAndSalt;
-        private byte[] salt;
-        private int iterationCount;
+        private int _iterationCount;
+        private byte[] _hashedPassword;
+        private byte[] _salt;
 
-        internal CacheKey(byte[] hashedPasswordAndSalt, byte[] salt, int iterationCount)
+        internal ScramCacheKey(byte[] hashedPassword, byte[] salt, int iterationCount)
         {
-            this.hashedPasswordAndSalt = hashedPasswordAndSalt;
-            this.salt = salt;
-            this.iterationCount = iterationCount;
+            _iterationCount = iterationCount;
+            _hashedPassword = hashedPassword;
+            _salt = salt;
         }
 
-        public override bool Equals(Object o)
+        public override bool Equals(object obj)
         {
-            if (this == o)
+            if (this == obj)
             {
                 return true;
             }
 
-            if (o == null || o.GetType() != o.GetType())
+            if (obj == null || obj.GetType() != obj.GetType())
             {
                 return false;
             }
 
-            CacheKey that = (CacheKey) o;
+            ScramCacheKey other = (ScramCacheKey) obj;
 
-            if (iterationCount != that.iterationCount)
-            {
-                return false;
-            }
-
-            if (!hashedPasswordAndSalt.Equals(that.hashedPasswordAndSalt))
-            {
-                return false;
-            }
-
-            return salt.Equals(that.salt);
+            return
+                _hashedPassword.SequenceEqual(other._hashedPassword) &&
+                _iterationCount == other._iterationCount &&
+                _salt.SequenceEqual(other._salt);
         }
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                var hashCode = (hashedPasswordAndSalt != null ? hashedPasswordAndSalt.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (salt != null ? salt.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ iterationCount;
-                return hashCode;
-            }
+            int hash = 17;
+            hash = 37 * hash + _iterationCount.GetHashCode();
+            hash = 37 * hash + _hashedPassword.GetHashCode();
+            hash = 37 * hash + _salt.GetHashCode();
+            return hash;
         }
     }
 
-    internal class CacheValue
+    internal class ScramCacheEntry
     {
         private byte[] _clientKey;
+        private byte[] _saltedPassword;
         private byte[] _serverKey;
 
-        public CacheValue(byte[] clientKey, byte[] serverKey)
+        public ScramCacheEntry(byte[] clientKey, byte[] serverKey, byte[] saltedPassword)
         {
-            this._clientKey = clientKey;
-            this._serverKey = serverKey;
+            _clientKey = clientKey;
+            _saltedPassword = saltedPassword;
+            _serverKey = serverKey;
         }
 
-        public byte[] GetClientKey()
-        {
-            return _clientKey;
-        }
+        public byte[] ClientKey => _clientKey;
 
-        public byte[] GetServerKey()
-        {
-            return _serverKey;
-        }
+        public byte[] SaltedPassword => _saltedPassword;
+
+        public byte[] ServerKey => _serverKey;
     }
 }
