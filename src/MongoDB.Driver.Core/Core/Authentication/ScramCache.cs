@@ -1,4 +1,4 @@
-/* Copyright 2018–present MongoDB Inc.
+/* Copyright 2019–present MongoDB Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -23,33 +23,38 @@ namespace MongoDB.Driver.Core.Authentication
     /// </summary>
     internal class ScramCache
     {
-        private Object _cacheKey;
-        private Object _cacheValue;
+        private ScramCacheKey _cacheKey;
+        private ScramCacheEntry _cachedEntry;
 
         /// <summary>
         ///
         /// </summary>
         /// <param name="key"></param>
+        /// <param name="entry"></param>
         /// <returns></returns>
-        public ScramCacheEntry Get(Object key)
+        public bool TryGet(ScramCacheKey key, out ScramCacheEntry entry)
         {
-            if (_cacheKey != null && _cacheKey.Equals(key))
+            if (_cacheKey.Equals(key))
             {
-                return (ScramCacheEntry)_cacheValue;
+                entry = _cachedEntry;
+                return true;
             }
-
-            return null;
+            else
+            {
+                entry = null;
+                return false;
+            }
         }
 
         /// <summary>
         ///
         /// </summary>
         /// <param name="key"></param>
-        /// <param name="value"></param>
-        public void Set(Object key, Object value) //Tuple<string, string, int> key, byte[] clientKey, byte[] serverKey)
+        /// <param name="entry"></param>
+        public void Set(ScramCacheKey key, ScramCacheEntry entry) //Tuple<string, string, int> key, byte[] clientKey, byte[] serverKey)
         {
             _cacheKey = key;
-            _cacheValue = value;
+            _cachedEntry = entry;
         }
     }
 

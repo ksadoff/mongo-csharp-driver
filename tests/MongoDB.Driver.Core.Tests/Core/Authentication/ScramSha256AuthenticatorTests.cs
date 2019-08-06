@@ -311,14 +311,11 @@ namespace MongoDB.Driver.Core.Authentication
 
     }
 
-    internal static class CacheKeyReflector
+    internal static class ScramCacheReflector
     {
         public static ScramCacheKey _cacheKey (this ScramCache obj) =>
             (ScramCacheKey)Reflector.GetFieldValue(obj, nameof(_cacheKey));
-    }
 
-    internal static class CacheEntryReflector
-    {
         public static ScramCacheEntry _cacheEntry (this ScramCache obj) =>
             (ScramCacheEntry)Reflector.GetFieldValue(obj, nameof(_cacheEntry));
     }
