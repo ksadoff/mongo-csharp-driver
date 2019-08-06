@@ -33,9 +33,9 @@ namespace MongoDB.Driver.Tests.Specifications.server_selection
             [Values(false, true)] bool async)
         {
             var eventCapturer = new EventCapturer().Capture<CommandStartedEvent>(e => e.CommandName.Equals("find") || e.CommandName.Equals("$query"));
-            using (var subject = CreateDisposableClient(eventCapturer, ReadPreference.PrimaryPreferred))
+            using (var client = CreateDisposableClient(eventCapturer, ReadPreference.PrimaryPreferred))
             {
-                var database = subject.GetDatabase(DriverTestConfiguration.DatabaseNamespace.DatabaseName);
+                var database = client.GetDatabase(DriverTestConfiguration.DatabaseNamespace.DatabaseName);
                 var collection = database.GetCollection<BsonDocument>(DriverTestConfiguration.CollectionNamespace.CollectionName);
 
                 if (async)
@@ -48,13 +48,13 @@ namespace MongoDB.Driver.Tests.Specifications.server_selection
                 }
 
                 BsonDocument sentCommand = ((CommandStartedEvent)eventCapturer.Events[0]).Command;;
-                var serverVersion = subject.Cluster.Description.Servers[0].Version;
+                var serverVersion = client.Cluster.Description.Servers[0].Version;
 
-                if (subject.Cluster.Description.Type == ClusterType.Standalone)
+                if (client.Cluster.Description.Type == ClusterType.Standalone)
                 {
                     sentCommand.Contains("readPreference").Should().BeFalse();
                 }
-                else if (subject.Cluster.Description.Type == ClusterType.Sharded &&
+                else if (client.Cluster.Description.Type == ClusterType.Sharded &&
                          serverVersion < Feature.CommandMessage.FirstSupportedVersion)
                 {
                     if (((CommandStartedEvent) eventCapturer.Events[0]).CommandName.Equals("$query"))
