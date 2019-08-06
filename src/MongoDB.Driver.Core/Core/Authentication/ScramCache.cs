@@ -99,19 +99,15 @@ namespace MongoDB.Driver.Core.Authentication
     internal class ScramCacheEntry
     {
         private byte[] _clientKey;
-        private byte[] _saltedPassword;
         private byte[] _serverKey;
 
-        public ScramCacheEntry(byte[] clientKey, byte[] serverKey, byte[] saltedPassword)
+        public ScramCacheEntry(byte[] clientKey, byte[] serverKey)
         {
             _clientKey = clientKey;
-            _saltedPassword = saltedPassword;
             _serverKey = serverKey;
         }
 
         public byte[] ClientKey => _clientKey;
-
-        public byte[] SaltedPassword => _saltedPassword;
 
         public byte[] ServerKey => _serverKey;
     }

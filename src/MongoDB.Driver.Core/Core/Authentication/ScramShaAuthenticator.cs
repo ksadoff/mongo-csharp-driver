@@ -223,28 +223,27 @@ namespace MongoDB.Driver.Core.Authentication
                 var nonce = "r=" + r;
                 var clientFinalMessageWithoutProof = channelBinding + "," + nonce;
 
-                byte[] saltedPassword = null;
                 byte[] clientKey;
                 byte[] serverKey;
+                //placeholder until I know what to use for hashedPassword
+                byte[] hashedPassword = null;
 
-                //need to change from saltedPassword to just hashedPassword
-                var cacheKey = new ScramCacheKey(saltedPassword, Convert.FromBase64String(s), int.Parse(i));
+                var cacheKey = new ScramCacheKey(hashedPassword, Convert.FromBase64String(s), int.Parse(i));
 
                 if (_cache.Get(cacheKey) != null)
                 {
                     clientKey = _cache.Get(cacheKey).ClientKey;
                     serverKey = _cache.Get(cacheKey).ServerKey;
-                    saltedPassword = _cache.Get(cacheKey).SaltedPassword;
                 }
                 else
                 {
-                    clientKey = _hmac(encoding, saltedPassword, "Client Key");
-                    serverKey = _hmac(encoding, saltedPassword, "Server Key");
-                    saltedPassword = _hi(
+                    var saltedPassword = _hi(
                         _credential,
                         Convert.FromBase64String(s),
                         int.Parse(i));
-                    _cache.Set(cacheKey, new ScramCacheEntry(clientKey, serverKey, saltedPassword));
+                    clientKey = _hmac(encoding, saltedPassword, "Client Key");
+                    serverKey = _hmac(encoding, saltedPassword, "Server Key");
+                    _cache.Set(cacheKey, new ScramCacheEntry(clientKey, serverKey));
                 }
 
                 var storedKey = _h(clientKey);
