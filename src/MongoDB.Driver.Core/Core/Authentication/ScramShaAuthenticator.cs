@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 using MongoDB.Bson.IO;
@@ -228,10 +229,8 @@ namespace MongoDB.Driver.Core.Authentication
 
                 byte[] clientKey;
                 byte[] serverKey;
-                //placeholder until I know what to use for hashedPassword
-                byte[] hashedPassword = null;
 
-                var cacheKey = new ScramCacheKey(hashedPassword, Convert.FromBase64String(s), int.Parse(i));
+                var cacheKey = new ScramCacheKey(_credential.SaslPreppedPassword, salt, iterations);
                 if (_cache.TryGet(cacheKey, out var cacheEntry))
                 {
                     clientKey = cacheEntry.ClientKey;

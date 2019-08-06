@@ -15,6 +15,8 @@
 
 using System;
 using System.Linq;
+using System.Security;
+using MongoDB.Driver.Core.Misc;
 
 namespace MongoDB.Driver.Core.Authentication
 {
@@ -61,16 +63,26 @@ namespace MongoDB.Driver.Core.Authentication
     internal class ScramCacheKey
     {
         private int _iterationCount;
-        private byte[] _hashedPassword;
+        private SecureString _password;
         private byte[] _salt;
 
-        internal ScramCacheKey(byte[] hashedPassword, byte[] salt, int iterationCount)
+        internal ScramCacheKey(SecureString password, byte[] salt, int iterationCount)
         {
             _iterationCount = iterationCount;
-            _hashedPassword = hashedPassword;
+            _password = password;
             _salt = salt;
         }
 
+        private bool Equals(SecureString x, SecureString y)
+        {
+            using (var dx = new DecryptedSecureString(x))
+            using (var dy = new DecryptedSecureString(y))
+            {
+                var xchars = dx.GetChars();
+                var ychars = dy.GetChars();
+                return xchars.SequenceEqual(ychars);
+            }
+        }
         public override bool Equals(object obj)
         {
             if (this == obj)
@@ -86,7 +98,7 @@ namespace MongoDB.Driver.Core.Authentication
             ScramCacheKey other = (ScramCacheKey) obj;
 
             return
-                _hashedPassword.SequenceEqual(other._hashedPassword) &&
+                Equals(_password,other._password) &&
                 _iterationCount == other._iterationCount &&
                 _salt.SequenceEqual(other._salt);
         }
@@ -95,7 +107,7 @@ namespace MongoDB.Driver.Core.Authentication
         {
             int hash = 17;
             hash = 37 * hash + _iterationCount.GetHashCode();
-            hash = 37 * hash + _hashedPassword.GetHashCode();
+            hash = 37 * hash + _password.GetHashCode();
             hash = 37 * hash + _salt.GetHashCode();
             return hash;
         }
