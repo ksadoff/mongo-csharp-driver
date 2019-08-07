@@ -32,7 +32,8 @@ namespace MongoDB.Driver.Tests
         public void ReadPreference_should_not_be_sent_to_standalone_server(
             [Values(false, true)] bool async)
         {
-            var eventCapturer = new EventCapturer().Capture<CommandStartedEvent>(e => e.CommandName.Equals("find") || e.CommandName.Equals("$query"));
+            var eventCapturer = new EventCapturer().Capture<CommandStartedEvent>(e =>
+                e.CommandName.Equals("find") || e.CommandName.Equals("$query"));
             using (var client = CreateDisposableClient(eventCapturer, ReadPreference.PrimaryPreferred))
             {
                 var database = client.GetDatabase(DriverTestConfiguration.DatabaseNamespace.DatabaseName);
@@ -47,30 +48,19 @@ namespace MongoDB.Driver.Tests
                     var _ = collection.FindSync("{ x : 2 }");
                 }
 
-                CommandStartedEvent sentCommand = ((CommandStartedEvent)eventCapturer.Events[0]);
-
+                CommandStartedEvent sentCommand = ((CommandStartedEvent) eventCapturer.Events[0]);
                 var serverVersion = client.Cluster.Description.Servers[0].Version;
+                var clusterType = client.Cluster.Description.Type;
 
-                if (client.Cluster.Description.Type == ClusterType.Standalone)
-                {
-                    sentCommand.Command.Contains("readPreference").Should().BeFalse();
-                }
-                else if (client.Cluster.Description.Type == ClusterType.Sharded &&
-                         serverVersion < Feature.CommandMessage.FirstSupportedVersion)
-                {
-                    if (sentCommand.CommandName.Equals("$query"))
-                    {
-                        sentCommand.Command.Contains("$readPreference").Should().BeTrue();
-                    }
-                    else if (sentCommand.CommandName.Equals("find"))
-                    {
-                        sentCommand.Command.Contains("readPreference").Should().BeTrue();
-                    }
-                }
-                else if (serverVersion >= Feature.CommandMessage.FirstSupportedVersion)
-                {
-                    sentCommand.Command.Contains("$readPreference").Should().BeTrue();
-                }
+                var expectedContainsReadPreference = clusterType == ClusterType.Standalone ||
+                    (clusterType == ClusterType.ReplicaSet && serverVersion < Feature.CommandMessage.FirstSupportedVersion)
+                    ? false
+                    : true;
+                var readPreferenceFieldName = sentCommand.Command.Contains("$readPreference")
+                    ? "$readPreference"
+                    : "readPreference";
+
+                sentCommand.Command.Contains(readPreferenceFieldName).Should().Be(expectedContainsReadPreference);
             }
         }
 
