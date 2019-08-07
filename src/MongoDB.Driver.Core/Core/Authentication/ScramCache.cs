@@ -37,7 +37,7 @@ namespace MongoDB.Driver.Core.Authentication
         /// <returns></returns>
         public bool TryGet(ScramCacheKey key, out ScramCacheEntry entry)
         {
-            if (_cacheKey.Equals(key))
+            if (key.Equals(_cacheKey))
             {
                 entry = _cachedEntry;
                 return true;
