@@ -238,10 +238,7 @@ namespace MongoDB.Driver.Core.Authentication
                 }
                 else
                 {
-                    var saltedPassword = _hi(
-                        _credential,
-                        salt,
-                        iterations);
+                    var saltedPassword = _hi( _credential, salt, iterations);
                     clientKey = _hmac(encoding, saltedPassword, "Client Key");
                     serverKey = _hmac(encoding, saltedPassword, "Server Key");
                     _cache.Set(cacheKey, new ScramCacheEntry(clientKey, serverKey));

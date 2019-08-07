@@ -17,6 +17,7 @@ using System;
 using System.Linq;
 using System.Security;
 using MongoDB.Driver.Core.Misc;
+using MongoDB.Shared;
 
 namespace MongoDB.Driver.Core.Authentication
 {
@@ -53,7 +54,7 @@ namespace MongoDB.Driver.Core.Authentication
         /// </summary>
         /// <param name="key"></param>
         /// <param name="entry"></param>
-        public void Set(ScramCacheKey key, ScramCacheEntry entry) //Tuple<string, string, int> key, byte[] clientKey, byte[] serverKey)
+        public void Set(ScramCacheKey key, ScramCacheEntry entry)
         {
             _cacheKey = key;
             _cachedEntry = entry;
@@ -73,16 +74,6 @@ namespace MongoDB.Driver.Core.Authentication
             _salt = salt;
         }
 
-        private bool Equals(SecureString x, SecureString y)
-        {
-            using (var dx = new DecryptedSecureString(x))
-            using (var dy = new DecryptedSecureString(y))
-            {
-                var xchars = dx.GetChars();
-                var ychars = dy.GetChars();
-                return xchars.SequenceEqual(ychars);
-            }
-        }
         public override bool Equals(object obj)
         {
             if (this == obj)
@@ -103,13 +94,35 @@ namespace MongoDB.Driver.Core.Authentication
                 _salt.SequenceEqual(other._salt);
         }
 
+        // TODO: still need to find a correct way to get hash of byte[]
         public override int GetHashCode()
         {
             int hash = 17;
             hash = 37 * hash + _iterationCount.GetHashCode();
-            hash = 37 * hash + _password.GetHashCode();
+            hash = 37 * hash + GetHashCode(_password);
             hash = 37 * hash + _salt.GetHashCode();
             return hash;
+        }
+
+        // private methods
+        private bool Equals(SecureString x, SecureString y)
+        {
+            using (var dx = new DecryptedSecureString(x))
+            using (var dy = new DecryptedSecureString(y))
+            {
+                var xchars = dx.GetChars();
+                var ychars = dy.GetChars();
+                return xchars.SequenceEqual(ychars);
+            }
+        }
+
+        // potential way to get hash of a SecureString? Taken from PasswordEvidence.cs
+        private int GetHashCode(SecureString password)
+        {
+            using (var decryptedPassword = new DecryptedSecureString(password))
+            {
+                return new Hasher().HashStructElements(decryptedPassword.GetChars()).GetHashCode();
+            }
         }
     }
 
