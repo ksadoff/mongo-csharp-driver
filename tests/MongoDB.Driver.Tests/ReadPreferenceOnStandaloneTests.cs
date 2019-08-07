@@ -47,28 +47,29 @@ namespace MongoDB.Driver.Tests
                     var _ = collection.FindSync("{ x : 2 }");
                 }
 
-                BsonDocument sentCommand = ((CommandStartedEvent)eventCapturer.Events[0]).Command;;
+                CommandStartedEvent sentCommand = ((CommandStartedEvent)eventCapturer.Events[0]);
+
                 var serverVersion = client.Cluster.Description.Servers[0].Version;
 
                 if (client.Cluster.Description.Type == ClusterType.Standalone)
                 {
-                    sentCommand.Contains("readPreference").Should().BeFalse();
+                    sentCommand.Command.Contains("readPreference").Should().BeFalse();
                 }
                 else if (client.Cluster.Description.Type == ClusterType.Sharded &&
                          serverVersion < Feature.CommandMessage.FirstSupportedVersion)
                 {
-                    if (((CommandStartedEvent) eventCapturer.Events[0]).CommandName.Equals("$query"))
+                    if (sentCommand.CommandName.Equals("$query"))
                     {
-                        sentCommand.Contains("$readPreference").Should().BeTrue();
+                        sentCommand.Command.Contains("$readPreference").Should().BeTrue();
                     }
-                    else if (((CommandStartedEvent) eventCapturer.Events[0]).CommandName.Equals("find"))
+                    else if (sentCommand.CommandName.Equals("find"))
                     {
-                        sentCommand.Contains("readPreference").Should().BeTrue();
+                        sentCommand.Command.Contains("readPreference").Should().BeTrue();
                     }
                 }
                 else if (serverVersion >= Feature.CommandMessage.FirstSupportedVersion)
                 {
-                    sentCommand.Contains("$readPreference").Should().BeTrue();
+                    sentCommand.Command.Contains("$readPreference").Should().BeTrue();
                 }
             }
         }
