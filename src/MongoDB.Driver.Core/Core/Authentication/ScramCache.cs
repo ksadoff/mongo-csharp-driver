@@ -30,7 +30,7 @@ namespace MongoDB.Driver.Core.Authentication
         private ScramCacheEntry _cachedEntry;
 
         /// <summary>
-        ///
+        /// Try to get a cached entry.
         /// </summary>
         /// <param name="key"></param>
         /// <param name="entry"></param>
@@ -50,11 +50,11 @@ namespace MongoDB.Driver.Core.Authentication
         }
 
         /// <summary>
-        ///
+        /// Add a cached entry.
         /// </summary>
         /// <param name="key"></param>
         /// <param name="entry"></param>
-        public void Set(ScramCacheKey key, ScramCacheEntry entry)
+        public void Add(ScramCacheKey key, ScramCacheEntry entry)
         {
             _cacheKey = key;
             _cachedEntry = entry;
@@ -94,14 +94,13 @@ namespace MongoDB.Driver.Core.Authentication
                 _salt.SequenceEqual(other._salt);
         }
 
-        // TODO: still need to find a correct way to get hash of byte[]
         public override int GetHashCode()
         {
-            int hash = 17;
-            hash = 37 * hash + _iterationCount.GetHashCode();
-            hash = 37 * hash + GetHashCode(_password);
-            hash = 37 * hash + _salt.GetHashCode();
-            return hash;
+            // ignore _password when computing the hash code
+            return new Hasher()
+                .Hash(_iterationCount)
+                .Hash(_salt)
+                .GetHashCode();
         }
 
         // private methods
@@ -113,15 +112,6 @@ namespace MongoDB.Driver.Core.Authentication
                 var xchars = dx.GetChars();
                 var ychars = dy.GetChars();
                 return xchars.SequenceEqual(ychars);
-            }
-        }
-
-        // potential way to get hash of a SecureString? Taken from PasswordEvidence.cs
-        private int GetHashCode(SecureString password)
-        {
-            using (var decryptedPassword = new DecryptedSecureString(password))
-            {
-                return new Hasher().HashStructElements(decryptedPassword.GetChars()).GetHashCode();
             }
         }
     }

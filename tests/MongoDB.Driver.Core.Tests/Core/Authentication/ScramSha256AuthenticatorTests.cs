@@ -300,7 +300,7 @@ namespace MongoDB.Driver.Core.Authentication
 
             subject._cache().Should().NotBe(null);
             subject._cache()._cacheKey().Should().NotBe(null);
-            subject._cache()._cacheEntry().Should().NotBe(null);
+            subject._cache()._cachedEntry().Should().NotBe(null);
         }
     }
 
@@ -316,7 +316,7 @@ namespace MongoDB.Driver.Core.Authentication
         public static ScramCacheKey _cacheKey (this ScramCache obj) =>
             (ScramCacheKey)Reflector.GetFieldValue(obj, nameof(_cacheKey));
 
-        public static ScramCacheEntry _cacheEntry (this ScramCache obj) =>
-            (ScramCacheEntry)Reflector.GetFieldValue(obj, nameof(_cacheEntry));
+        public static ScramCacheEntry _cachedEntry (this ScramCache obj) =>
+            (ScramCacheEntry)Reflector.GetFieldValue(obj, nameof(_cachedEntry));
     }
 }

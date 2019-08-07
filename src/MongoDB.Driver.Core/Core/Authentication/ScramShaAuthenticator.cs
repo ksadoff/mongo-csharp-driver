@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 using MongoDB.Bson.IO;
@@ -241,7 +240,7 @@ namespace MongoDB.Driver.Core.Authentication
                     var saltedPassword = _hi( _credential, salt, iterations);
                     clientKey = _hmac(encoding, saltedPassword, "Client Key");
                     serverKey = _hmac(encoding, saltedPassword, "Server Key");
-                    _cache.Set(cacheKey, new ScramCacheEntry(clientKey, serverKey));
+                    _cache.Add(cacheKey, new ScramCacheEntry(clientKey, serverKey));
                 }
 
                 var storedKey = _h(clientKey);

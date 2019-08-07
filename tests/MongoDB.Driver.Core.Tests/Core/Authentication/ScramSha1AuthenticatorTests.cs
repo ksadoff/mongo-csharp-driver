@@ -194,24 +194,22 @@ namespace MongoDB.Driver.Core.Authentication
             connection.EnqueueReplyMessage(saslStartReply);
             connection.EnqueueReplyMessage(saslContinueReply);
 
-            Action act;
             if (async)
             {
-                act = () => subject.AuthenticateAsync(connection, __description, CancellationToken.None).GetAwaiter()
+                subject.AuthenticateAsync(connection, __description, CancellationToken.None).GetAwaiter()
                     .GetResult();
             }
             else
             {
-                act = () => subject.Authenticate(connection, __description, CancellationToken.None);
+                subject.Authenticate(connection, __description, CancellationToken.None);
             }
 
-            act.ShouldNotThrow();
             SpinWait.SpinUntil(() => connection.GetSentMessages().Count >= 2, TimeSpan.FromSeconds(5)).Should()
                 .BeTrue();
 
             subject._cache().Should().NotBe(null);
             subject._cache()._cacheKey().Should().NotBe(null);
-            subject._cache()._cacheValue().Should().NotBe(null);
+            subject._cache()._cachedEntry().Should().NotBe(null);
         }
     }
 }
