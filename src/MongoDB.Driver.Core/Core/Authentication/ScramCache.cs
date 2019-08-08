@@ -106,14 +106,43 @@ namespace MongoDB.Driver.Core.Authentication
         // private methods
         private bool Equals(SecureString x, SecureString y)
         {
+            if (object.ReferenceEquals(x, y))
+            {
+                return true;
+            }
+
+            if (object.ReferenceEquals(x, null) || object.ReferenceEquals(y, null))
+            {
+                return false;
+
+            }
             using (var dx = new DecryptedSecureString(x))
             using (var dy = new DecryptedSecureString(y))
             {
                 var xchars = dx.GetChars();
                 var ychars = dy.GetChars();
-                return xchars.SequenceEqual(ychars);
+                return Equals(xchars, ychars);
             }
         }
+
+        private bool Equals(char[] x, char[] y)
+        {
+            if (x.Length != y.Length)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < x.Length; i++)
+            {
+                if (x[i] != y[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
     }
 
     internal class ScramCacheEntry
